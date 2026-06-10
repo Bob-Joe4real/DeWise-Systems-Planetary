@@ -36,7 +36,3 @@ self.addEventListener('fetch', (e) => {
     })
   );
 });
-      return cachedResponse || fetch(e.request);
-    })
-  );
-});
