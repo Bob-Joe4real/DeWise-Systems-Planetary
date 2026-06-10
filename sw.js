@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dewise-planetary-v4.0';
+const CACHE_NAME = 'dewise-planetary-v5.0';
 const ASSETS = [
   'index.html',
   'manifest.json',
@@ -10,9 +10,8 @@ const ASSETS = [
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Synchronizing DeWise Engine Assets...');
       return cache.addAll(ASSETS);
-    })
+    }).then(() => self.skipWaiting())
   );
 });
 
@@ -22,7 +21,6 @@ self.addEventListener('activate', (e) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log('Purging legacy planetary cache structures:', key);
             return caches.delete(key);
           }
         })
@@ -34,6 +32,10 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
+      return cachedResponse || fetch(e.request);
+    })
+  );
+});
       return cachedResponse || fetch(e.request);
     })
   );
