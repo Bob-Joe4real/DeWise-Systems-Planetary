@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dewise-planetary-v8.0';
+const CACHE_NAME = 'dewise-planetary-v9.0';
 const ASSETS = [
   'index.html',
   'manifest.json',
@@ -36,4 +36,3 @@ self.addEventListener('fetch', (e) => {
     })
   );
 });
-
