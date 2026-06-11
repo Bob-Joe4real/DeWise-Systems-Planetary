@@ -265,7 +265,7 @@
     </div>
 
     <div id="hud">
-        <span style="color:var(--neon-cyan)">⚡ DE-WISE ADVANCED AERO OS v9.0</span><br>
+        <span style="color:var(--neon-cyan)">⚡ DE-WISE ADVANCED AERO OS v10.0</span><br>
         Score: <span id="score" class="hud-val">0</span><br>
         Velocity: <span id="speed" class="hud-val">0</span> km/s<br>
         Record: <span id="highScore" class="hud-val">0</span>
@@ -329,9 +329,12 @@
     let spawnIntervalId;
     let cinematicTime = 0;
 
-    // --- STUNT & PHYSICS EXTRACTION COEFFICIENTS ---
+    // --- STUNT & DOUBLE TAP VELOCITY COEFFICIENTS ---
     let TargetRollRotation = 0;
     let CurrentRollRotation = 0;
+    let lastLeftTapTime = 0;
+    let lastRightTapTime = 0;
+    const DOUBLE_TAP_DELAY = 250; // Milliseconds threshold for double click/tap
 
     // --- AUDIO SYSTEM LAYER ---
     let isMuted = false;
@@ -394,6 +397,17 @@
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.start(now); osc.stop(now + 0.5);
         }
+        else if (type === 'stunt') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(440, now);
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(now); osc.stop(now + 0.3);
+        }
     }
 
     function toggleMute(event) {
@@ -420,6 +434,87 @@
         }
     }
 
+    // --- COMPACT FIN-WINGED AIRCRAFT MODEL BUILDER ---
+    function buildAdvancedAircraft() {
+        const aircraftGroup = new THREE.Group();
+
+        // Fuselage Main Cylinder
+        const bodyGeo = new THREE.CylinderGeometry(0.16, 0.20, 1.9, 8);
+        bodyGeo.rotateX(Math.PI / 2);
+        const titaniumMat = new THREE.MeshStandardMaterial({ color: 0xddddf5, metalness: 0.85, roughness: 0.15 });
+        const fuselage = new THREE.Mesh(bodyGeo, titaniumMat);
+        aircraftGroup.add(fuselage);
+
+        // Pointy Cockpit Nose Cone
+        const noseGeo = new THREE.ConeGeometry(0.16, 0.7, 8);
+        noseGeo.rotateX(Math.PI / 2);
+        const darkChromeMat = new THREE.MeshStandardMaterial({ color: 0x112233, metalness: 0.9, roughness: 0.05 });
+        const nose = new THREE.Mesh(noseGeo, darkChromeMat);
+        nose.position.set(0, 0, -1.3); 
+        aircraftGroup.add(nose);
+
+        // STUBBY SHORT WING STABILIZERS (Drastically Shortened Wing Profile)
+        const stubbyWingShape = new THREE.Shape();
+        stubbyWingShape.moveTo(0, 0);
+        stubbyWingShape.lineTo(0.45, -0.3);   // Ultra-short horizontal extension
+        stubbyWingShape.lineTo(0.15, -0.5);   // Tapered return path
+        stubbyWingShape.lineTo(0, -0.2);
+
+        const wingExtrudeSettings = { depth: 0.03, bevelEnabled: true, bevelSegments: 1, steps: 1, bevelSize: 0.01, bevelThickness: 0.01 };
+        const wingGeo = new THREE.ExtrudeGeometry(stubbyWingShape, wingExtrudeSettings);
+        wingGeo.rotateX(Math.PI / 2);
+        wingGeo.center();
+
+        const neonMat = new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x003355, metalness: 0.7 });
+        
+        const leftWing = new THREE.Mesh(wingGeo, neonMat);
+        leftWing.position.set(-0.3, -0.05, 0.2);
+        leftWing.scale.set(-1, 1, 1); 
+        aircraftGroup.add(leftWing);
+
+        const rightWing = new THREE.Mesh(wingGeo, neonMat);
+        rightWing.position.set(0.3, -0.05, 0.2);
+        aircraftGroup.add(rightWing);
+
+        // Vertical Stabilizer Tail Fin
+        const finShape = new THREE.Shape();
+        finShape.moveTo(0, 0);
+        finShape.lineTo(0, 0.5);
+        finShape.lineTo(-0.3, 0.35);
+        finShape.lineTo(-0.4, 0);
+        const finGeo = new THREE.ExtrudeGeometry(finShape, wingExtrudeSettings);
+        finGeo.center();
+        const fin = new THREE.Mesh(finGeo, titaniumMat);
+        fin.position.set(0, 0.32, 0.6);
+        aircraftGroup.add(fin);
+
+        // Twin Thruster Assemblies
+        const engineGeo = new THREE.CylinderGeometry(0.07, 0.07, 0.25, 8);
+        engineGeo.rotateX(Math.PI / 2);
+        const engineMat = new THREE.MeshStandardMaterial({ color: 0x333344, metalness: 0.9 });
+        const glowMat = new THREE.MeshStandardMaterial({ color: 0xffdf00, emissive: 0xff5500 });
+
+        const leftEngine = new THREE.Mesh(engineGeo, engineMat);
+        leftEngine.position.set(-0.09, 0, 0.95);
+        aircraftGroup.add(leftEngine);
+
+        const rightEngine = new THREE.Mesh(engineGeo, engineMat);
+        rightEngine.position.set(0.09, 0, 0.95);
+        aircraftGroup.add(rightEngine);
+
+        const flareGeo = new THREE.ConeGeometry(0.05, 0.2, 6);
+        flareGeo.rotateX(-Math.PI / 2);
+        const leftFlare = new THREE.Mesh(flareGeo, glowMat);
+        leftFlare.position.set(-0.09, 0, 1.08);
+        aircraftGroup.add(leftFlare);
+
+        const rightFlare = new THREE.Mesh(flareGeo, glowMat);
+        rightFlare.position.set(0.09, 0, 1.08);
+        aircraftGroup.add(rightFlare);
+
+        return aircraftGroup;
+    }
+
     function triggerAlert(text, color) {
         const alertDiv = document.getElementById("gameAlert");
         alertDiv.innerText = text; alertDiv.style.color = color;
@@ -427,89 +522,7 @@
         setTimeout(() => { alertDiv.style.opacity = "0"; }, 800);
     }
 
-    // --- REAL AIRCRAFT MODEL BUILDER ENGINE ---
-    function buildAdvancedAircraft() {
-        const aircraftGroup = new THREE.Group();
-
-        // Fuselage Main Frame
-        const bodyGeo = new THREE.CylinderGeometry(0.18, 0.22, 1.8, 8);
-        bodyGeo.rotateX(Math.PI / 2);
-        const titaniumMat = new THREE.MeshStandardMaterial({ color: 0xddddf5, metalness: 0.85, roughness: 0.15 });
-        const fuselage = new THREE.Mesh(bodyGeo, titaniumMat);
-        aircraftGroup.add(fuselage);
-
-        // Pointy Cockpit Nose Cone
-        const noseGeo = new THREE.ConeGeometry(0.18, 0.7, 8);
-        noseGeo.rotateX(Math.PI / 2);
-        const darkChromeMat = new THREE.MeshStandardMaterial({ color: 0x112233, metalness: 0.9, roughness: 0.05 });
-        const nose = new THREE.Mesh(noseGeo, darkChromeMat);
-        nose.position.set(0, 0, -1.25); // Forward displacement
-        aircraftGroup.add(nose);
-
-        // Sweep-Back Aero Delta Wings
-        const wingShape = new THREE.Shape();
-        wingShape.moveTo(0, 0);
-        wingShape.lineTo(1.8, -0.9);   // Wingtip displacement
-        wingShape.lineTo(0.4, -1.2);   // Rear return profile
-        wingShape.lineTo(0, -0.4);
-
-        const wingExtrudeSettings = { depth: 0.04, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.02, bevelThickness: 0.02 };
-        const wingGeo = new THREE.ExtrudeGeometry(wingShape, wingExtrudeSettings);
-        wingGeo.rotateX(Math.PI / 2);
-        wingGeo.center();
-
-        const neonMat = new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x003355, metalness: 0.7 });
-        
-        const leftWing = new THREE.Mesh(wingGeo, neonMat);
-        leftWing.position.set(-0.9, -0.05, 0.1);
-        leftWing.scale.set(-1, 1, 1); // Flip geometry along X-axis
-        aircraftGroup.add(leftWing);
-
-        const rightWing = new THREE.Mesh(wingGeo, neonMat);
-        rightWing.position.set(0.9, -0.05, 0.1);
-        aircraftGroup.add(rightWing);
-
-        // Vertical Stabilizer Tail Fin
-        const finShape = new THREE.Shape();
-        finShape.moveTo(0, 0);
-        finShape.lineTo(0, 0.6);
-        finShape.lineTo(-0.4, 0.4);
-        finShape.lineTo(-0.5, 0);
-        const finGeo = new THREE.ExtrudeGeometry(finShape, wingExtrudeSettings);
-        finGeo.center();
-        const fin = new THREE.Mesh(finGeo, titaniumMat);
-        fin.position.set(0, 0.35, 0.6);
-        aircraftGroup.add(fin);
-
-        // Twin Thruster Afterburners
-        const engineGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.3, 8);
-        engineGeo.rotateX(Math.PI / 2);
-        const engineMat = new THREE.MeshStandardMaterial({ color: 0x333344, metalness: 0.9 });
-        const glowMat = new THREE.MeshStandardMaterial({ color: 0xffdf00, emissive: 0xff5500 });
-
-        const leftEngine = new THREE.Mesh(engineGeo, engineMat);
-        leftEngine.position.set(-0.1, 0, 0.9);
-        aircraftGroup.add(leftEngine);
-
-        const rightEngine = new THREE.Mesh(engineGeo, engineMat);
-        rightEngine.position.set(0.1, 0, 0.9);
-        aircraftGroup.add(rightEngine);
-
-        // Visual exhaust flare indicators
-        const flareGeo = new THREE.ConeGeometry(0.06, 0.25, 6);
-        flareGeo.rotateX(-Math.PI / 2);
-        const leftFlare = new THREE.Mesh(flareGeo, glowMat);
-        leftFlare.position.set(-0.1, 0, 1.05);
-        aircraftGroup.add(leftFlare);
-
-        const rightFlare = new THREE.Mesh(flareGeo, glowMat);
-        rightFlare.position.set(0.1, 0, 1.05);
-        aircraftGroup.add(rightFlare);
-
-        return aircraftGroup;
-    }
-
-    // --- CORE THREE.JS INITIALIZATION LAYER ---
+     // --- CORE THREE.JS INITIALIZATION LAYER ---
     function init() {
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x050512);
@@ -526,12 +539,10 @@
         keyLight.position.set(5, 25, 15);
         scene.add(keyLight);
 
-        // Generate and append the advanced real model composition
         playerShip = buildAdvancedAircraft();
         playerShip.position.set(0, 0.5, 0);
         scene.add(playerShip);
 
-        // Core Space Stars System
         const starsGeo = new THREE.BufferGeometry();
         const starPositions = new Float32Array(400 * 3);
         for(let i=0; i<400*3; i+=3) {
@@ -543,7 +554,6 @@
         const starsMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.45});
         scene.add(new THREE.Points(starsGeo, starsMat));
 
-        // --- SPLASH SCREEN GRAPHICS ANIMATION LAYER ---
         menuGalaxyGroup = new THREE.Group();
         
         const menuPlanetGeo = new THREE.SphereGeometry(3.5, 32, 32);
@@ -578,18 +588,49 @@
         animate();
     }
 
+    // --- DOUBLE TAP / CLICK STUNT HANDLERS ---
+    function triggerLeftAction() {
+        let currentTime = Date.now();
+        if (currentTime - lastLeftTapTime < DOUBLE_TAP_DELAY) {
+            if (TargetRollRotation === 0) { // Lock to avoid overlapping triggers
+                TargetRollRotation = Math.PI * 2; 
+                playSynthSound('stunt');
+                triggerAlert("BARREL ROLL LEFT!", "var(--neon-cyan)");
+            }
+        }
+        lastLeftTapTime = currentTime;
+    }
+
+    function triggerRightAction() {
+        let currentTime = Date.now();
+        if (currentTime - lastRightTapTime < DOUBLE_TAP_DELAY) {
+            if (TargetRollRotation === 0) {
+                TargetRollRotation = -Math.PI * 2;
+                playSynthSound('stunt');
+                triggerAlert("BARREL ROLL RIGHT!", "var(--neon-cyan)");
+            }
+        }
+        lastRightTapTime = currentTime;
+    }
+
     function setupControls() {
         const leftBtn = document.getElementById("leftBtn"), rightBtn = document.getElementById("rightBtn");
         
-        leftBtn.addEventListener("touchstart", (e) => { e.preventDefault(); initAudio(); moveLeft = true; TargetRollRotation = Math.PI * 2; });
+        leftBtn.addEventListener("touchstart", (e) => { e.preventDefault(); initAudio(); moveLeft = true; triggerLeftAction(); });
         leftBtn.addEventListener("touchend", (e) => { e.preventDefault(); moveLeft = false; });
-        rightBtn.addEventListener("touchstart", (e) => { e.preventDefault(); initAudio(); moveRight = true; TargetRollRotation = -Math.PI * 2; });
+        rightBtn.addEventListener("touchstart", (e) => { e.preventDefault(); initAudio(); moveRight = true; triggerRightAction(); });
         rightBtn.addEventListener("touchend", (e) => { e.preventDefault(); moveRight = false; });
         
         document.addEventListener("keydown", (e) => {
             initAudio();
-            if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") { moveLeft = true; TargetRollRotation = Math.PI * 2; }
-            if (e.key === "ArrowRight" || e.key.toLowerCase() === "d") { moveRight = true; TargetRollRotation = -Math.PI * 2; }
+            if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") { 
+                if(!moveLeft) triggerLeftAction(); // Trigger only on downstroke edge
+                moveLeft = true; 
+            }
+            if (e.key === "ArrowRight" || e.key.toLowerCase() === "d") { 
+                if(!moveRight) triggerRightAction();
+                moveRight = true; 
+            }
         });
         document.addEventListener("keyup", (e) => {
             if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") moveLeft = false;
@@ -637,13 +678,11 @@
             if (moveLeft && playerShip.position.x > -2.6) playerShip.position.x -= 0.18;
             if (moveRight && playerShip.position.x < 2.6) playerShip.position.x += 0.18;
 
-            // --- SMOOTH BARREL ROLL INTERPOLATION ---
+            // --- SMOOTH STUNT BARREL ROLL ENGINE ---
             if (TargetRollRotation !== 0) {
-                // Advance step increment smoothly
                 const step = (TargetRollRotation > 0) ? 0.22 : -0.22;
                 CurrentRollRotation += step;
                 
-                // Track complete full cycle loop rotation closure
                 if (Math.abs(CurrentRollRotation) >= Math.PI * 2) {
                     CurrentRollRotation = 0;
                     TargetRollRotation = 0;
@@ -660,7 +699,7 @@
                     scene.remove(obj); gameObjects.splice(i, 1); continue; 
                 }
                 
-                if (playerShip.position.distanceTo(obj.position) < (obj.userData.radius + 0.6)) {
+                if (playerShip.position.distanceTo(obj.position) < (obj.userData.radius + 0.45)) {
                     if (obj.userData.type === "planet") { handleGameOver(); return; }
                     else if (obj.userData.type === "booster") {
                         speed = Math.min(speed + 0.08, 0.8);
@@ -679,7 +718,7 @@
             camera.lookAt(new THREE.Vector3(playerShip.position.x, 0.6, playerShip.position.z - 10));
 
         } else {
-            // --- MENU VIEW DRIFTING SIMULATION ---
+            // --- MENU CINEMATIC VIEW ---
             cinematicTime += 0.003;
             if(menuGalaxyGroup) {
                 menuGalaxyGroup.rotation.y += 0.002;
@@ -706,12 +745,11 @@
         
         startingMusic.pause();
         if (!isMuted) {
-            gameplayMusic.play().catch(e => console.error("Audio pipeline block:", e));
+            gameplayMusic.play().catch(e => console.error("Audio block context:", e));
         }
 
         if(menuGalaxyGroup) { scene.remove(menuGalaxyGroup); }
 
-        // Secure baseline positioning for race launch
         playerShip.position.set(0, 0.5, 0);
         playerShip.rotation.set(0, 0, 0);
         CurrentRollRotation = 0;
@@ -743,4 +781,3 @@
 </script>
 </body>
 </html>
-    
