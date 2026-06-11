@@ -21,8 +21,8 @@
             --neon-magenta: #ff00ff;
             --neon-red: #ff3333;
             --bg-space: #060616;
-            --glass-bg: rgba(20, 20, 50, 0.7);
-            --glass-border: rgba(0, 243, 255, 0.35);
+            --glass-bg: rgba(10, 10, 35, 0.6);
+            --glass-border: rgba(0, 243, 255, 0.25);
         }
 
         body, html {
@@ -65,7 +65,7 @@
             #audioToggleBtn { padding: 14px 24px; font-size: 14px; gap: 10px; }
         }
 
-        /* --- UI OVERLAYS --- */
+        /* --- SCREEN OVERLAYS WITH GLASSMORPHISM --- */
         .screen-overlay {
             position: absolute;
             top: 0;
@@ -78,32 +78,50 @@
             flex-direction: column;
             color: #ffffff;
             z-index: 1000;
-            background: radial-gradient(circle at center, rgba(15, 15, 45, 0.95) 0%, var(--bg-space) 100%);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: radial-gradient(circle at center, rgba(6, 6, 22, 0.4) 0%, rgba(6, 6, 22, 0.85) 100%);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
             padding: 20px;
             box-sizing: border-box;
             text-align: center;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* --- ADVANCED KINETIC TEXT ANIMATIONS --- */
         .brand-title {
-            font-size: clamp(1.2rem, 4vw, 2.2rem);
-            letter-spacing: 4px;
+            font-size: clamp(1.4rem, 5vw, 2.5rem);
+            letter-spacing: 6px;
             text-transform: uppercase;
             color: #ffffff;
             font-weight: 900;
             margin-bottom: 5px;
-            text-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+            animation: textGlowPulse 3s ease-in-out infinite alternate;
         }
 
         .brand-subtitle {
-            font-size: clamp(2.2rem, 8vw, 3.8rem);
+            font-size: clamp(2.5rem, 10vw, 4.5rem);
             font-weight: 900;
-            letter-spacing: 6px;
-            margin: 0 0 30px 0;
+            letter-spacing: 12px;
+            margin: 0 0 40px 0;
             text-transform: uppercase;
             color: var(--neon-cyan);
-            text-shadow: 0 0 35px rgba(0, 243, 255, 0.8);
+            position: relative;
+            animation: subTitleScaleBreathe 4s ease-in-out infinite alternate, cosmicColorShift 8s linear infinite;
+        }
+
+        @keyframes textGlowPulse {
+            0% { text-shadow: 0 0 10px rgba(255,255,255,0.3), 0 0 20px rgba(0,243,255,0.2); transform: translateY(0px); }
+            100% { text-shadow: 0 0 20px rgba(255,255,255,0.6), 0 0 40px rgba(0,243,255,0.5); transform: translateY(-4px); }
+        }
+
+        @keyframes subTitleScaleBreathe {
+            0% { transform: scale(0.96); letter-spacing: 10px; filter: drop-shadow(0 0 15px rgba(0,243,255,0.4)); }
+            100% { transform: scale(1.03); letter-spacing: 14px; filter: drop-shadow(0 0 35px rgba(0,243,255,0.9)); }
+        }
+
+        @keyframes cosmicColorShift {
+            0%, 100% { color: var(--neon-cyan); }
+            50% { color: var(--neon-magenta); }
         }
 
         .btn-modern {
@@ -117,16 +135,20 @@
             border-radius: 50px;
             cursor: pointer;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .btn-modern:hover {
             border-color: var(--neon-cyan);
-            box-shadow: 0 0 25px rgba(0, 243, 255, 0.5);
-            transform: translateY(-2px);
+            background: rgba(0, 243, 255, 0.15);
+            box-shadow: 0 0 35px rgba(0, 243, 255, 0.6);
+            transform: translateY(-3px) scale(1.03);
+            color: #fff;
         }
 
-        /* --- ADAPTIVE HUD --- */
+        /* --- HUD VIEWPORT --- */
         #hud {
             position: absolute;
             top: max(20px, env(safe-area-inset-top));
@@ -135,19 +157,19 @@
             padding: 12px 20px;
             border-radius: 14px;
             border: 1px solid var(--glass-border);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             color: #e0e0ff;
             font-family: monospace;
             font-size: clamp(11px, 2vw, 14px);
             z-index: 10;
             pointer-events: none;
             line-height: 1.6;
+            display: none; /* Hidden during cinematic preview */
         }
 
         .hud-val { color: #fff; font-weight: bold; }
 
-        /* HUD NOTIFICATIONS */
         #gameAlert {
             position: absolute;
             top: 25%;
@@ -164,7 +186,7 @@
             text-align: center;
         }
 
-        /* --- CONTROLS --- */
+        /* --- MOBILITY TOUCH CHANNELS --- */
         .control-container {
             position: absolute;
             bottom: max(25px, env(safe-area-inset-bottom));
@@ -176,6 +198,7 @@
             justify-content: space-between;
             pointer-events: none;
             z-index: 20;
+            display: none; /* Hidden during splash layout */
         }
 
         .hud-dir-btn {
@@ -201,7 +224,7 @@
             transform: scale(0.9);
         }
 
-        /* --- iOS EXCLUSIVE DRAWER --- */
+        /* --- iOS EXCLUSIVE NOTIFIER --- */
         #iosPrompt {
             display: none;
             position: fixed;
@@ -243,7 +266,7 @@
     </div>
 
     <div id="hud">
-        <span style="color:var(--neon-cyan)">⚡ DE-WISE OS v7.0</span><br>
+        <span style="color:var(--neon-cyan)">⚡ DE-WISE OS v8.0</span><br>
         Score: <span id="score" class="hud-val">0</span><br>
         Velocity: <span id="speed" class="hud-val">0</span> km/s<br>
         Record: <span id="highScore" class="hud-val">0</span>
@@ -251,7 +274,55 @@
 
     <div id="gameAlert"></div>
 
-    <div class="control-container">
+    <div class="control-container" id="controlPanel">
+        <button id="leftBtn" class="hud-dir-btn" aria-label="Steer Left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#00f3ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+        </button>
+        <button id="rightBtn" class="hud-dir-btn" aria-label="Steer Right">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#00f3ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+        </button>
+    </div>
+
+    <div id="gameOverScreen" class="screen-overlay">
+        <div class="brand-title" style="color: var(--neon-red)">System Alert</div>
+        <h1 style="text-shadow: 0 0 30px rgba(255, 51, 51, 0.4); font-size: 2.2rem;">CRITICAL COLLISION</h1>
+        <button class="btn-modern" style="border-color: var(--neon-red);" onclick="restartGame()">RE-MATERIALIZE</button>
+    </div>
+
+    <div id="iosPrompt">
+        <span class="close-prompt" onclick="document.getElementById('iosPrompt').style.display='none'">✕</span>
+        <h3>Install DeWise Planetary</h3>
+        <p>Tap the <strong>Share</strong> icon in Safari, then select <strong>"Add to Home Screen"</strong> to run directly as a full-screen app.</p>
+                </div>
+    
+<body>
+
+    <button id="audioToggleBtn" onclick="toggleMute(event)">
+        <span id="audioIcon">🔊</span> <span id="audioText">SOUND: ON</span>
+    </button>
+
+    <div id="menuScreen" class="screen-overlay" onclick="handleMenuInteraction()">
+        <div class="brand-title">DeWise Systems</div>
+        <div class="brand-subtitle">PLANETARY</div>
+        <button class="btn-modern" onclick="startGame(event)">LAUNCH ENGINE</button>
+    </div>
+
+    <div id="hud">
+        <span style="color:var(--neon-cyan)">⚡ DE-WISE OS v8.0</span><br>
+        Score: <span id="score" class="hud-val">0</span><br>
+        Velocity: <span id="speed" class="hud-val">0</span> km/s<br>
+        Record: <span id="highScore" class="hud-val">0</span>
+    </div>
+
+    <div id="gameAlert"></div>
+
+    <div class="control-container" id="controlPanel">
         <button id="leftBtn" class="hud-dir-btn" aria-label="Steer Left">
             <svg viewBox="0 0 24 24" fill="none" stroke="#00f3ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -278,12 +349,12 @@
         <p>Tap the <strong>Share</strong> icon in Safari, then select <strong>"Add to Home Screen"</strong> to run directly as a full-screen app.</p>
     </div>
 
-    <script>
+<script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('PWA ServiceWorker Active.'))
-                .catch(err => console.error('ServiceWorker failure.', err));
+                .then(reg => console.log('PWA Connected.'))
+                .catch(err => console.error('PWA Engine offline framework failure.', err));
         });
     }
 
@@ -295,7 +366,7 @@
         }
     });
 
-    let scene, camera, renderer, playerShip;
+    let scene, camera, renderer, playerShip, menuGalaxyGroup;
     let gameRunning = false;
     let speed = 0.25;
     const baseSpeed = 0.25;
@@ -305,13 +376,13 @@
     const lanes = [-2.5, 0, 2.5];
     let moveLeft = false, moveRight = false;
     let spawnIntervalId;
+    let cinematicTime = 0;
 
-    // --- AUDIO CONTROLLER ENGINE ---
+    // --- AUDIO SYSTEM LAYER ---
     let isMuted = false;
     let audioCtx = null;
     let audioInitialized = false;
 
-    // Custom File Objects Linked to Root Variables
     const startingMusic = new Audio('starting.mp3');
     const gameplayMusic = new Audio('theme.wav');
     startingMusic.loop = true;
@@ -326,14 +397,13 @@
     function handleMenuInteraction() {
         initAudio();
         if (!gameRunning && startingMusic.paused && !isMuted) {
-            startingMusic.play().catch(e => console.log("Audio pipeline awaiting user interaction element."));
+            startingMusic.play().catch(e => console.log("Audio waiting on interaction."));
         }
     }
 
     function playSynthSound(type) {
         if (isMuted || !audioCtx) return;
         if (audioCtx.state === 'suspended') audioCtx.resume();
-
         const now = audioCtx.currentTime;
         
         if (type === 'booster') {
@@ -344,10 +414,8 @@
             osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
             gain.gain.setValueAtTime(0.15, now);
             gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(now);
-            osc.stop(now + 0.15);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(now); osc.stop(now + 0.15);
         } 
         else if (type === 'reducer') {
             const osc = audioCtx.createOscillator();
@@ -357,10 +425,8 @@
             osc.frequency.linearRampToValueAtTime(150, now + 0.25);
             gain.gain.setValueAtTime(0.2, now);
             gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(now);
-            osc.stop(now + 0.25);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(now); osc.stop(now + 0.25);
         } 
         else if (type === 'crash') {
             const osc = audioCtx.createOscillator();
@@ -370,10 +436,8 @@
             osc.frequency.linearRampToValueAtTime(40, now + 0.5);
             gain.gain.setValueAtTime(0.4, now);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(now);
-            osc.stop(now + 0.5);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(now); osc.stop(now + 0.5);
         }
     }
 
@@ -381,7 +445,6 @@
         if(event) event.stopPropagation();
         initAudio();
         isMuted = !isMuted;
-        
         startingMusic.muted = isMuted;
         gameplayMusic.muted = isMuted;
         
@@ -390,37 +453,30 @@
         const text = document.getElementById("audioText");
         
         if (isMuted) {
-            icon.innerText = "✕";
-            text.innerText = "SOUND: MUTED";
+            icon.innerText = "✕"; text.innerText = "SOUND: MUTED";
             btn.style.setProperty("background", "#ff3333", "important");
             btn.style.setProperty("box-shadow", "0 0 30px #ff3333", "important");
         } else {
-            icon.innerText = "🔊";
-            text.innerText = "SOUND: ON";
+            icon.innerText = "🔊"; text.innerText = "SOUND: ON";
             btn.style.setProperty("background", "#00f3ff", "important");
             btn.style.setProperty("box-shadow", "0 0 30px #00f3ff", "important");
-            if (gameRunning) {
-                gameplayMusic.play().catch(()=>{});
-            } else {
-                startingMusic.play().catch(()=>{});
-            }
+            if (gameRunning) gameplayMusic.play().catch(()=>{});
+            else startingMusic.play().catch(()=>{});
         }
     }
 
     function triggerAlert(text, color) {
         const alertDiv = document.getElementById("gameAlert");
-        alertDiv.innerText = text;
-        alertDiv.style.color = color;
-        alertDiv.style.textShadow = `0 0 15px ${color}`;
-        alertDiv.style.opacity = "1";
+        alertDiv.innerText = text; alertDiv.style.color = color;
+        alertDiv.style.textShadow = `0 0 15px ${color}`; alertDiv.style.opacity = "1";
         setTimeout(() => { alertDiv.style.opacity = "0"; }, 800);
     }
     
-    // --- THREE.JS LAYER ---
+    // --- CINEMATIC THREE.JS WEB GRAPHICS LAYER ---
     function init() {
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a0a20);
-        scene.fog = new THREE.FogExp2(0x0a0a20, 0.012);
+        scene.background = new THREE.Color(0x050512);
+        scene.fog = new THREE.FogExp2(0x050512, 0.012);
 
         camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
         renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
@@ -428,11 +484,12 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        scene.add(new THREE.AmbientLight(0x666699));
-        const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
-        keyLight.position.set(5, 20, 10);
+        scene.add(new THREE.AmbientLight(0x7777aa));
+        const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
+        keyLight.position.set(5, 25, 15);
         scene.add(keyLight);
 
+        // Active Player Ship
         const shipGeo = new THREE.ConeGeometry(0.35, 1.6, 4); 
         shipGeo.rotateX(Math.PI / 2);
         const shipMat = new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x004466, metalness: 0.8 });
@@ -440,16 +497,49 @@
         playerShip.position.set(0, 0.5, 0);
         scene.add(playerShip);
 
+        // Core Space Stars System
         const starsGeo = new THREE.BufferGeometry();
-        const starPositions = new Float32Array(300 * 3);
-        for(let i=0; i<300*3; i+=3) {
-            starPositions[i] = (Math.random() - 0.5) * 140;
-            starPositions[i+1] = (Math.random() - 0.5) * 140;
-            starPositions[i+2] = (Math.random() - 1) * 200;
+        const starPositions = new Float32Array(400 * 3);
+        for(let i=0; i<400*3; i+=3) {
+            starPositions[i] = (Math.random() - 0.5) * 160;
+            starPositions[i+1] = (Math.random() - 0.5) * 160;
+            starPositions[i+2] = (Math.random() - 0.5) * 250;
         }
         starsGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-        const starsMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.4});
+        const starsMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.45});
         scene.add(new THREE.Points(starsGeo, starsMat));
+
+        // --- SPLASH SCREEN GRAPHICS ANIMATION LAYER ---
+        menuGalaxyGroup = new THREE.Group();
+        
+        // Spawn Background Splash Screen Planet
+        const menuPlanetGeo = new THREE.SphereGeometry(3.5, 32, 32);
+        const menuPlanetMat = new THREE.MeshStandardMaterial({ color: 0xaa33ff, roughness: 0.8, metalness: 0.2, wireframe: false });
+        const menuPlanet = new THREE.Mesh(menuPlanetGeo, menuPlanetMat);
+        menuPlanet.position.set(-8, 2, -25);
+        menuGalaxyGroup.add(menuPlanet);
+
+        // Spawn Secondary Gas Giant Planet
+        const menuPlanetGeo2 = new THREE.SphereGeometry(2.0, 24, 24);
+        const menuPlanetMat2 = new THREE.MeshStandardMaterial({ color: 0xff5500, roughness: 0.5 });
+        const menuPlanet2 = new THREE.Mesh(menuPlanetGeo2, menuPlanetMat2);
+        menuPlanet2.position.set(9, -3, -30);
+        menuGalaxyGroup.add(menuPlanet2);
+
+        // Local Splash System Particle Cloud (The Galaxy Dust)
+        const galaxyDustGeo = new THREE.BufferGeometry();
+        const dustPositions = new Float32Array(150 * 3);
+        for(let i=0; i<150*3; i+=3) {
+            dustPositions[i] = (Math.random() - 0.5) * 40;
+            dustPositions[i+1] = (Math.random() - 0.5) * 40;
+            dustPositions[i+2] = (Math.random() - 0.5) * 40 - 20;
+        }
+        galaxyDustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+        const dustMat = new THREE.PointsMaterial({color: 0x00f3ff, size: 0.6, transparent: true, opacity: 0.8});
+        const galaxyDust = new THREE.Points(galaxyDustGeo, dustMat);
+        menuGalaxyGroup.add(galaxyDust);
+
+        scene.add(menuGalaxyGroup);
 
         document.getElementById("highScore").innerText = highScore;
         setupControls();
@@ -504,7 +594,9 @@
 
     function animate() {
         requestAnimationFrame(animate);
+        
         if (gameRunning) {
+            // --- STANDARD MODE ACTIVE ENGINE CONTROLLER ---
             playerShip.position.z -= speed;
             speed += 0.00002;
 
@@ -521,16 +613,12 @@
                 obj.rotation.x += 0.01;
                 
                 if (obj.position.z > playerShip.position.z + 10) { 
-                    scene.remove(obj); 
-                    gameObjects.splice(i, 1); 
-                    continue; 
+                    scene.remove(obj); gameObjects.splice(i, 1); continue; 
                 }
                 
                 if (playerShip.position.distanceTo(obj.position) < (obj.userData.radius + 0.4)) {
-                    if (obj.userData.type === "planet") { 
-                        handleGameOver(); 
-                        return; 
-                    } else if (obj.userData.type === "booster") {
+                    if (obj.userData.type === "planet") { handleGameOver(); return; }
+                    else if (obj.userData.type === "booster") {
                         speed = Math.min(speed + 0.08, 0.8);
                         playSynthSound('booster');
                         triggerAlert("BOOST! SPEED UP", "var(--neon-gold)");
@@ -539,14 +627,37 @@
                         playSynthSound('reducer');
                         triggerAlert("REDUCER! VELOCITY DROP", "var(--neon-magenta)");
                     }
-                    scene.remove(obj); 
-                    gameObjects.splice(i, 1);
+                    scene.remove(obj); gameObjects.splice(i, 1);
                 }
             }
+
+            // Lock camera setup cleanly behind running craft
+            camera.position.set(playerShip.position.x * 0.75, 2.2, playerShip.position.z + 5.0);
+            camera.lookAt(new THREE.Vector3(playerShip.position.x, 0.6, playerShip.position.z - 10));
+
+        } else {
+            // --- SPLASH MENU INTERACTIVE CINEMATIC LAYER ---
+            cinematicTime += 0.003;
+            
+            // Slow ambient spin of cosmic objects behind typography layers
+            if(menuGalaxyGroup) {
+                menuGalaxyGroup.rotation.y += 0.002;
+                menuGalaxyGroup.rotation.x = Math.sin(cinematicTime * 0.5) * 0.05;
+            }
+
+            // Drifting floating profile animation for center ship presentation
+            playerShip.position.x = Math.sin(cinematicTime * 2) * 1.5;
+            playerShip.position.y = 0.5 + Math.cos(cinematicTime * 3) * 0.4;
+            playerShip.rotation.y += 0.015;
+            playerShip.rotation.z = Math.sin(cinematicTime * 2) * 0.2;
+
+            // Sweeping panoramic tracking shot
+            camera.position.x = Math.sin(cinematicTime) * 6;
+            camera.position.y = 3.5 + Math.cos(cinematicTime) * 1.5;
+            camera.position.z = 8.0;
+            camera.lookAt(new THREE.Vector3(0, 0.5, -5));
         }
         
-        camera.position.set(playerShip.position.x * 0.75, 2.2, playerShip.position.z + 5.0);
-        camera.lookAt(new THREE.Vector3(playerShip.position.x, 0.6, playerShip.position.z - 10));
         renderer.render(scene, camera);
     }
 
@@ -554,15 +665,28 @@
         if(event) event.stopPropagation();
         initAudio();
         
-        // Audio transition: halt menu track, bring up runtime gameplay track
         startingMusic.pause();
         if (!isMuted) {
-            gameplayMusic.play().catch(e => console.error("Gameplay audio blocked:", e));
+            gameplayMusic.play().catch(e => console.error("Audio block context:", e));
         }
-        
-        document.getElementById("menuScreen").style.display = "none";
-        gameRunning = true;
-        spawnIntervalId = setInterval(spawnEntity, 650);
+
+        // Wipe out local splash menu meshes to optimize active memory frames
+        if(menuGalaxyGroup) {
+            scene.remove(menuGalaxyGroup);
+        }
+
+        // Reset player craft alignment smoothly for runner track launch
+        playerShip.position.set(0, 0.5, 0);
+        playerShip.rotation.set(0, 0, 0);
+
+        document.getElementById("menuScreen").style.opacity = "0";
+        setTimeout(() => {
+            document.getElementById("menuScreen").style.display = "none";
+            document.getElementById("hud").style.display = "block";
+            document.getElementById("controlPanel").style.display = "flex";
+            gameRunning = true;
+            spawnIntervalId = setInterval(spawnEntity, 650);
+        }, 600);
     }
 
     function handleGameOver() {
@@ -581,3 +705,6 @@
 </script>
 </body>
 </html>
+
+
+    
