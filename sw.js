@@ -1,9 +1,9 @@
-const CACHE_NAME = 'dewise-planetary-v5.0';
+const CACHE_NAME = 'dewise-planetary-v8.0';
 const ASSETS = [
   'index.html',
   'manifest.json',
-  'menu_theme.mp3',
-  'space_drift_theme.mp3',
+  'starting.mp3',
+  'theme.wav',
   'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
 ];
 
@@ -36,3 +36,4 @@ self.addEventListener('fetch', (e) => {
     })
   );
 });
+
