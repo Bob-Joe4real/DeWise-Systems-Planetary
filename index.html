@@ -3,12 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>DeWise Systems PLANETARY</title>
-    
-    <!-- Optimized viewport constraints for perfect responsive mobile scaling -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#1a1a3a">
-    
-    <!-- Apple Safari PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="DeWise Planetary">
@@ -22,6 +18,7 @@
         :root {
             --neon-cyan: #00f3ff;
             --neon-gold: #ffdf00;
+            --neon-magenta: #ff00ff;
             --neon-red: #ff3333;
             --bg-space: #060616;
             --glass-bg: rgba(20, 20, 50, 0.7);
@@ -41,7 +38,7 @@
             touch-action: none;
         }
 
-        /* --- STABLE VIEWPORT FLEXIBLE AUDIO TOGGLE --- */
+        /* --- IMMUTABLE TOP LAYER AUDIO TOGGLE --- */
         #audioToggleBtn {
             position: absolute;
             top: max(20px, env(safe-area-inset-top));
@@ -65,14 +62,10 @@
         }
 
         @media (min-width: 768px) {
-            #audioToggleBtn {
-                padding: 14px 24px;
-                font-size: 14px;
-                gap: 10px;
-            }
+            #audioToggleBtn { padding: 14px 24px; font-size: 14px; gap: 10px; }
         }
 
-        /* --- SCREEN RESPONSIVE OVERLAYS --- */
+        /* --- UI OVERLAYS --- */
         .screen-overlay {
             position: absolute;
             top: 0;
@@ -133,7 +126,7 @@
             transform: translateY(-2px);
         }
 
-        /* --- ADAPTIVE HUD LAYOUT --- */
+        /* --- ADAPTIVE HUD --- */
         #hud {
             position: absolute;
             top: max(20px, env(safe-area-inset-top));
@@ -154,7 +147,24 @@
 
         .hud-val { color: #fff; font-weight: bold; }
 
-        /* --- FLUID MOBILE CONTROLS --- */
+        /* HUD NOTIFICATIONS */
+        #gameAlert {
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Segoe UI', sans-serif;
+            font-size: clamp(20px, 5vw, 32px);
+            font-weight: 900;
+            letter-spacing: 2px;
+            z-index: 500;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        /* --- CONTROLS --- */
         .control-container {
             position: absolute;
             bottom: max(25px, env(safe-area-inset-bottom));
@@ -185,14 +195,13 @@
         }
 
         .hud-dir-btn svg { width: 45%; height: 45%; }
-        
         .hud-dir-btn:active {
             border-color: #ffffff;
             background: rgba(0, 243, 255, 0.3);
             transform: scale(0.9);
         }
 
-        /* --- iOS EXCLUSIVE WEB APP PROMPT --- */
+        /* --- iOS EXCLUSIVE DRAWER --- */
         #iosPrompt {
             display: none;
             position: fixed;
@@ -215,14 +224,7 @@
 
         #iosPrompt h3 { margin: 0 0 10px 0; color: var(--neon-cyan); font-size: 16px; }
         #iosPrompt p { margin: 0; font-size: 13px; line-height: 1.5; color: #d0d0f0; }
-        #iosPrompt .close-prompt {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            color: #ff3333;
-            font-weight: bold;
-            cursor: pointer;
-        }
+        #iosPrompt .close-prompt { position: absolute; top: 10px; right: 15px; color: #ff3333; font-weight: bold; cursor: pointer; }
 
         #gameOverScreen { display: none; }
     </style>
@@ -241,11 +243,13 @@
     </div>
 
     <div id="hud">
-        <span style="color:var(--neon-cyan)">⚡ DE-WISE OS v5.0</span><br>
+        <span style="color:var(--neon-cyan)">⚡ DE-WISE OS v7.0</span><br>
         Score: <span id="score" class="hud-val">0</span><br>
         Velocity: <span id="speed" class="hud-val">0</span> km/s<br>
         Record: <span id="highScore" class="hud-val">0</span>
     </div>
+
+    <div id="gameAlert"></div>
 
     <div class="control-container">
         <button id="leftBtn" class="hud-dir-btn" aria-label="Steer Left">
@@ -268,15 +272,13 @@
         <button class="btn-modern" style="border-color: var(--neon-red);" onclick="restartGame()">RE-MATERIALIZE</button>
     </div>
 
-    <!-- Apple Web App Guide Drawer -->
     <div id="iosPrompt">
         <span class="close-prompt" onclick="document.getElementById('iosPrompt').style.display='none'">✕</span>
         <h3>Install DeWise Planetary</h3>
-        <p>Tap the <strong>Share</strong> icon in your Safari toolbar, then select <strong>"Add to Home Screen"</strong> to install this engine on your Apple device.</p>
+        <p>Tap the <strong>Share</strong> icon in Safari, then select <strong>"Add to Home Screen"</strong> to run directly as a full-screen app.</p>
     </div>
 
-<script>
-    // Universal PWA Loader Engine
+    <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('sw.js')
@@ -285,7 +287,6 @@
         });
     }
 
-    // Interactive Apple PWA UI Guard
     document.addEventListener("DOMContentLoaded", () => {
         const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         const isStandalone = window.navigator.standalone === true;
@@ -296,9 +297,8 @@
 
     let scene, camera, renderer, playerShip;
     let gameRunning = false;
-    let speed = 0.22;
-    const minSpeed = 0.18;
-    const maxSpeed = 0.65;
+    let speed = 0.25;
+    const baseSpeed = 0.25;
     let gameScore = 0;
     let highScore = Number(localStorage.getItem("dewiseHighScore")) || 0;
     let gameObjects = [];
@@ -306,35 +306,83 @@
     let moveLeft = false, moveRight = false;
     let spawnIntervalId;
 
-    // --- AUDIO SYSTEM LAYER (CASE-SENSITIVE LOWERCASE COMPLIANT) ---
+    // --- AUDIO CONTROLLER ENGINE ---
     let isMuted = false;
-    let audioContextUnlocked = false;
-    const menuMusic = new Audio('menu_theme.mp3');
-    const gameplayMusic = new Audio('space_drift_theme.mp3');
-    menuMusic.loop = true;
+    let audioCtx = null;
+    let audioInitialized = false;
+
+    // Custom File Objects Linked to Root Variables
+    const startingMusic = new Audio('starting.mp3');
+    const gameplayMusic = new Audio('theme.wav');
+    startingMusic.loop = true;
     gameplayMusic.loop = true;
 
-    function unlockAudioContext() {
-        if (audioContextUnlocked) return;
-        // Pre-load audio elements cleanly for mobile browsers
-        menuMusic.play().then(() => { menuMusic.pause(); }).catch(()=>{});
-        gameplayMusic.play().then(() => { gameplayMusic.pause(); }).catch(()=>{});
-        audioContextUnlocked = true;
+    function initAudio() {
+        if (audioInitialized) return;
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        audioInitialized = true;
     }
 
     function handleMenuInteraction() {
-        unlockAudioContext();
-        if (!gameRunning && menuMusic.paused && !isMuted) {
-            menuMusic.play().catch(e => console.log("Audio waiting on touch."));
+        initAudio();
+        if (!gameRunning && startingMusic.paused && !isMuted) {
+            startingMusic.play().catch(e => console.log("Audio pipeline awaiting user interaction element."));
+        }
+    }
+
+    function playSynthSound(type) {
+        if (isMuted || !audioCtx) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const now = audioCtx.currentTime;
+        
+        if (type === 'booster') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } 
+        else if (type === 'reducer') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, now);
+            osc.frequency.linearRampToValueAtTime(150, now + 0.25);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.25);
+        } 
+        else if (type === 'crash') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(160, now);
+            osc.frequency.linearRampToValueAtTime(40, now + 0.5);
+            gain.gain.setValueAtTime(0.4, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.5);
         }
     }
 
     function toggleMute(event) {
         if(event) event.stopPropagation();
-        unlockAudioContext();
-        
+        initAudio();
         isMuted = !isMuted;
-        menuMusic.muted = isMuted;
+        
+        startingMusic.muted = isMuted;
         gameplayMusic.muted = isMuted;
         
         const btn = document.getElementById("audioToggleBtn");
@@ -354,12 +402,21 @@
             if (gameRunning) {
                 gameplayMusic.play().catch(()=>{});
             } else {
-                menuMusic.play().catch(()=>{});
+                startingMusic.play().catch(()=>{});
             }
         }
     }
 
-    // --- RESPONSIVE THREE.JS ENGINE LAYER ---
+    function triggerAlert(text, color) {
+        const alertDiv = document.getElementById("gameAlert");
+        alertDiv.innerText = text;
+        alertDiv.style.color = color;
+        alertDiv.style.textShadow = `0 0 15px ${color}`;
+        alertDiv.style.opacity = "1";
+        setTimeout(() => { alertDiv.style.opacity = "0"; }, 800);
+    }
+    
+    // --- THREE.JS LAYER ---
     function init() {
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x0a0a20);
@@ -371,7 +428,7 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        scene.add(new THREE.AmbientLight(0x555588));
+        scene.add(new THREE.AmbientLight(0x666699));
         const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
         keyLight.position.set(5, 20, 10);
         scene.add(keyLight);
@@ -403,13 +460,13 @@
     function setupControls() {
         const leftBtn = document.getElementById("leftBtn"), rightBtn = document.getElementById("rightBtn");
         
-        leftBtn.addEventListener("touchstart", (e) => { e.preventDefault(); unlockAudioContext(); moveLeft = true; });
+        leftBtn.addEventListener("touchstart", (e) => { e.preventDefault(); initAudio(); moveLeft = true; });
         leftBtn.addEventListener("touchend", (e) => { e.preventDefault(); moveLeft = false; });
-        rightBtn.addEventListener("touchstart", (e) => { e.preventDefault(); unlockAudioContext(); moveRight = true; });
+        rightBtn.addEventListener("touchstart", (e) => { e.preventDefault(); initAudio(); moveRight = true; });
         rightBtn.addEventListener("touchend", (e) => { e.preventDefault(); moveRight = false; });
         
         document.addEventListener("keydown", (e) => {
-            unlockAudioContext();
+            initAudio();
             if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") moveLeft = true;
             if (e.key === "ArrowRight" || e.key.toLowerCase() === "d") moveRight = true;
         });
@@ -425,18 +482,22 @@
         let objGeo, objMat, typeName, size = 0.4;
 
         if (randType < 0.45) {
-            typeName = "planet"; size = 0.6 + Math.random() * 0.7;
+            typeName = "planet"; size = 0.6 + Math.random() * 0.6;
             objGeo = new THREE.SphereGeometry(size, 16, 16);
-            objMat = new THREE.MeshStandardMaterial({ color: 0xff5733, roughness: 0.6 });
-        } else {
-            typeName = "goldStar"; size = 0.35;
+            objMat = new THREE.MeshStandardMaterial({ color: 0xff5733, roughness: 0.7 });
+        } else if (randType < 0.75) {
+            typeName = "booster"; size = 0.3;
             objGeo = new THREE.OctahedronGeometry(size, 0);
-            objMat = new THREE.MeshStandardMaterial({ color: 0xffdf00, metalness: 0.9 });
+            objMat = new THREE.MeshStandardMaterial({ color: 0xffdf00, metalness: 0.9, emissive: 0x443300 });
+        } else {
+            typeName = "reducer"; size = 0.3;
+            objGeo = new THREE.BoxGeometry(size, size, size);
+            objMat = new THREE.MeshStandardMaterial({ color: 0xff00ff, metalness: 0.5, emissive: 0x330033 });
         }
 
         const mesh = new THREE.Mesh(objGeo, objMat);
-        mesh.position.set(lanes[Math.floor(Math.random() * 3)], 0.5, playerShip.position.z - 70);
-        mesh.userData = { type: typeName, radius: size, rotSpeed: 0.02 };
+        mesh.position.set(lanes[Math.floor(Math.random() * 3)], 0.5, playerShip.position.z - 75);
+        mesh.userData = { type: typeName, radius: size, rotSpeed: 0.03 };
         scene.add(mesh);
         gameObjects.push(mesh);
     }
@@ -446,29 +507,44 @@
         if (gameRunning) {
             playerShip.position.z -= speed;
             speed += 0.00002;
-            
-            // Score calculates based on depth velocity progress
+
             gameScore = Math.floor(Math.abs(playerShip.position.z) * 0.5);
             document.getElementById("score").innerText = gameScore;
             document.getElementById("speed").innerText = Math.floor(speed * 320);
 
-            if (moveLeft && playerShip.position.x > -2.6) playerShip.position.x -= 0.16;
-            if (moveRight && playerShip.position.x < 2.6) playerShip.position.x += 0.16;
+            if (moveLeft && playerShip.position.x > -2.6) playerShip.position.x -= 0.18;
+            if (moveRight && playerShip.position.x < 2.6) playerShip.position.x += 0.18;
 
             for (let i = gameObjects.length - 1; i >= 0; i--) {
                 let obj = gameObjects[i];
                 obj.rotation.y += obj.userData.rotSpeed;
-                if (obj.position.z > playerShip.position.z + 10) { scene.remove(obj); gameObjects.splice(i, 1); continue; }
+                obj.rotation.x += 0.01;
                 
-                if (playerShip.position.distanceTo(obj.position) < (obj.userData.radius + 0.35)) {
-                    if (obj.userData.type === "planet") { handleGameOver(); return; }
-                    // Scored collections logic
-                    scene.remove(obj); gameObjects.splice(i, 1);
+                if (obj.position.z > playerShip.position.z + 10) { 
+                    scene.remove(obj); 
+                    gameObjects.splice(i, 1); 
+                    continue; 
+                }
+                
+                if (playerShip.position.distanceTo(obj.position) < (obj.userData.radius + 0.4)) {
+                    if (obj.userData.type === "planet") { 
+                        handleGameOver(); 
+                        return; 
+                    } else if (obj.userData.type === "booster") {
+                        speed = Math.min(speed + 0.08, 0.8);
+                        playSynthSound('booster');
+                        triggerAlert("BOOST! SPEED UP", "var(--neon-gold)");
+                    } else if (obj.userData.type === "reducer") {
+                        speed = Math.max(speed - 0.06, baseSpeed);
+                        playSynthSound('reducer');
+                        triggerAlert("REDUCER! VELOCITY DROP", "var(--neon-magenta)");
+                    }
+                    scene.remove(obj); 
+                    gameObjects.splice(i, 1);
                 }
             }
         }
         
-        // Dynamically scaled tracking camera matrices
         camera.position.set(playerShip.position.x * 0.75, 2.2, playerShip.position.z + 5.0);
         camera.lookAt(new THREE.Vector3(playerShip.position.x, 0.6, playerShip.position.z - 10));
         renderer.render(scene, camera);
@@ -476,34 +552,32 @@
 
     function startGame(event) {
         if(event) event.stopPropagation();
-        unlockAudioContext();
-        menuMusic.pause();
+        initAudio();
+        
+        // Audio transition: halt menu track, bring up runtime gameplay track
+        startingMusic.pause();
         if (!isMuted) {
-            gameplayMusic.play().catch(e => console.error("Audio block:", e));
+            gameplayMusic.play().catch(e => console.error("Gameplay audio blocked:", e));
         }
+        
         document.getElementById("menuScreen").style.display = "none";
         gameRunning = true;
-        spawnIntervalId = setInterval(spawnEntity, 700);
+        spawnIntervalId = setInterval(spawnEntity, 650);
     }
 
     function handleGameOver() {
         gameRunning = false;
         clearInterval(spawnIntervalId);
         gameplayMusic.pause();
+        playSynthSound('crash');
         document.getElementById("gameOverScreen").style.display = "flex";
         if (gameScore > highScore) { localStorage.setItem("dewiseHighScore", gameScore); }
     }
 
     function restartGame() { location.reload(); }
-    
-    function onResize() { 
-        camera.aspect = window.innerWidth / window.innerHeight; 
-        camera.updateProjectionMatrix(); 
-        renderer.setSize(window.innerWidth, window.innerHeight); 
-    }
+    function onResize() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
 
     init();
 </script>
 </body>
-    </html>
-    
+</html>
